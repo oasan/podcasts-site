@@ -264,7 +264,45 @@ h2 { font-size: clamp(30px, 3.7vw, 44px); line-height: 1.1; letter-spacing: -.02
 .cells button.edge { box-shadow: 0 0 0 2px var(--bg-top), 0 0 0 4px var(--accent); }
 .arch-foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; font-size: 14px; color: var(--text-secondary); }
 .arch-foot .mono { color: var(--text-primary); }
-@media (max-width: 520px) { .cells button { font-size: 9px; border-radius: 6px; } .cells { gap: 4px; } .archive { padding: 16px; } }
+@media (max-width: 520px) {
+  .cells button { font-size: 9px; border-radius: 6px; }
+  .cells button.played::after { display: none; } /* на узких клетках галочка наезжает на номер */
+  .cells { gap: 4px; }
+  .archive { padding: 16px; }
+  /* Три варианта — в один ряд, шаг N — следующей строкой */
+  .chips { flex-wrap: nowrap; gap: 5px; width: 100%; }
+  .chips button { font-size: 11.5px; padding: 8px 9px; white-space: nowrap; }
+}
+
+/* ---------- Телефон: вкладки рядом, скриншот сразу под ними ----------
+   Текстовая колонка раскладывается (display: contents), чтобы её части и
+   скриншот стали соседями в одной сетке: так ряд вкладок прилипает под
+   шапкой на всём протяжении раздела, а телефон стоит прямо под ним. */
+@media (max-width: 900px) {
+  .split:has(.eps) { gap: 0; }
+  .split > div:has(> .eps) { display: contents; }
+  .split:has(.eps) > .stage { order: 5; margin: 24px 0 28px; }
+  .split:has(.eps) .eps { order: 4; }
+  .split:has(.eps) .tabpanel { order: 6; }
+  .split:has(.eps) .points { order: 7; }
+  .eps {
+    position: sticky; top: 65px; z-index: 5;
+    display: flex; gap: 6px; max-width: none; overflow-x: auto; scrollbar-width: none;
+    margin: 24px -24px 0; padding: 10px 24px;
+    background: color-mix(in srgb, var(--bg-top) 86%, transparent);
+    backdrop-filter: blur(14px) saturate(1.3); -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  }
+  .eps::-webkit-scrollbar { display: none; }
+  .eps button { flex: none; grid-template-columns: 26px auto; gap: 8px; padding: 5px 14px 5px 5px; border-radius: 999px; background: var(--quiet); }
+  .eps button[aria-selected="true"] { box-shadow: 0 1px 2px #0000000d, 0 6px 16px -10px #0005; }
+  .eps .pi { width: 26px; height: 26px; }
+  .eps .pi svg { width: 12px; height: 12px; margin-left: 1px; }
+  .eps .eq { height: 10px; gap: 2px; }
+  .eps .eq i { width: 2px; }
+  .eps b { font-size: 14.5px; white-space: nowrap; }
+  .eps small { display: none; }
+}
+@media (max-width: 600px) { .eps { margin-inline: -16px; padding-inline: 16px; } }
 
 /* ---------- Мелочи: повтор в названиях и список ---------- */
 .details { display: grid; grid-template-columns: 1.1fr 1fr; gap: 56px; margin-top: 48px; align-items: start; }
@@ -389,11 +427,36 @@ footer a { color: inherit; }
 }
 
 /* Просмотр скриншота */
-dialog.lightbox { border: 0; padding: 0; background: transparent; max-width: none; max-height: none; }
-dialog.lightbox::backdrop { background: #000c; backdrop-filter: blur(6px); }
-dialog.lightbox img { height: min(88vh, 940px); width: auto; border-radius: 28px; }
-dialog.lightbox form { position: fixed; top: 16px; right: 16px; }
-dialog.lightbox button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: #fff2; color: #fff; font-size: 22px; cursor: pointer; }
+dialog.lightbox {
+  border: 0; padding: 0; margin: 0; background: transparent; color: #fff;
+  width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; overflow: hidden;
+}
+dialog.lightbox[open] { display: grid; grid-template-rows: minmax(0, 1fr) auto; justify-items: center; }
+dialog.lightbox::backdrop { background: #000d; backdrop-filter: blur(6px); }
+.lb-close {
+  position: fixed; top: 16px; right: 16px; z-index: 2; width: 44px; height: 44px; border-radius: 50%;
+  border: 0; background: #fff2; color: #fff; font-size: 22px; cursor: pointer;
+}
+/* touch-action: pan-y — горизонтальный свайп достаётся странице, а не браузеру */
+.lb-stage { width: 100%; height: 100%; min-height: 0; display: grid; place-items: center; padding: 68px 16px 4px; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.lb-stage img {
+  /* Высота — экран минус отступ сверху (68) и панель с подписью (~88) */
+  height: calc(100vh - 156px); height: calc(100dvh - 156px - env(safe-area-inset-bottom));
+  max-height: 940px; width: auto; max-width: calc(100vw - 32px); aspect-ratio: 600 / 1347; object-fit: contain;
+  border-radius: 24px; background: #101214; -webkit-user-drag: none;
+  transition: opacity .25s ease, transform .3s cubic-bezier(.2,.8,.2,1);
+}
+.lb-stage img.fading { opacity: 0; }
+.lb-stage.dragging img { transition: none; }
+.lb-bar { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; gap: 12px; align-items: center; width: min(520px, 100%); padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); }
+.lb-arrow { width: 48px; height: 48px; border-radius: 50%; border: 0; background: #fff2; color: #fff; display: grid; place-items: center; cursor: pointer; transition: background-color .2s; }
+.lb-arrow:hover { background: #fff3; }
+.lb-arrow:disabled { opacity: .25; pointer-events: none; }
+.lb-arrow svg { width: 22px; height: 22px; }
+.lb-cap { text-align: center; min-width: 0; }
+.lb-cap b { display: block; font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lb-cap span { font-family: "JetBrains Mono", monospace; font-size: 12.5px; opacity: .65; }
+.lightbox.single .lb-arrow, .lightbox.single .lb-cap span { visibility: hidden; }
 </style>
 </head>
 <body>
@@ -612,7 +675,7 @@ dialog.lightbox button { width: 44px; height: 44px; border-radius: 50%; border: 
         <li><span class="ic"><svg><use href="#i-pause"/></svg></span><div><b>«Остановить все» помнит решение</b><span>Остановленные загрузки не оживут сами после перезапуска приложения.</span></div></li>
       </ul>
     </div>
-    <div class="stage reveal"><figure class="phone" style="--w:300px"><img data-shot="26-downloads" alt="Скачанные выпуски и занятое место" loading="lazy"></figure></div>
+    <div class="stage reveal"><figure class="phone" style="--w:300px" data-group="26-downloads:Загрузки|36-downloaded-episode:Скачанный выпуск"><img data-shot="26-downloads" alt="Скачанные выпуски и занятое место" loading="lazy"></figure></div>
   </div>
 </section>
 
@@ -707,9 +770,14 @@ dialog.lightbox button { width: 44px; height: 44px; border-radius: 50%; border: 
   </div>
 </footer>
 
-<dialog class="lightbox" id="lightbox">
-  <form method="dialog"><button aria-label="Закрыть">✕</button></form>
-  <img alt="">
+<dialog class="lightbox" id="lightbox" aria-label="Просмотр скриншота">
+  <form method="dialog"><button class="lb-close" aria-label="Закрыть">✕</button></form>
+  <div class="lb-stage" id="lb-stage"><img id="lb-img" alt="" draggable="false"></div>
+  <div class="lb-bar">
+    <button class="lb-arrow" id="lb-prev" aria-label="Предыдущий экран"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="lb-cap" aria-live="polite"><b id="lb-title"></b><span id="lb-count"></span></div>
+    <button class="lb-arrow" id="lb-next" aria-label="Следующий экран"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+  </div>
 </dialog>
 
 <script>
@@ -958,6 +1026,12 @@ dialog.lightbox button { width: 44px; height: 44px; border-radius: 50%; border: 
         t.tabIndex = on ? 0 : -1;
         document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
       });
+      // В ряду на телефоне выбранная вкладка не должна уезжать за край
+      if (list.scrollWidth > list.clientWidth) {
+        const l = tab.offsetLeft, r = l + tab.offsetWidth; // ряд sticky — он и есть offsetParent
+        if (l < list.scrollLeft + 16 || r > list.scrollLeft + list.clientWidth - 16)
+          list.scrollTo({ left: l - 16, behavior: "smooth" });
+      }
       swap(img, tab.dataset.shot);
     };
     tabs.forEach((t, i) => {
@@ -1025,16 +1099,103 @@ dialog.lightbox button { width: 44px; height: 44px; border-radius: 50%; border: 
   });
 
   // ---------- Увеличение скриншота ----------
+  // Скриншот открывается вместе со своей группой: кадрами вкладок раздела,
+  // телефонами первого экрана или всей каруселью. Листание в просмотре
+  // переключает и то, что видно на странице.
   const box = document.getElementById("lightbox");
+  const stage = document.getElementById("lb-stage");
+  const lbImg = document.getElementById("lb-img");
+  let group = { items: [], index: 0 };
+
+  const groupFor = fig => {
+    const img = fig.querySelector("img");
+    if (fig.closest("#reel"))
+      return { items: REEL, index: items.indexOf(fig.closest(".item")), sync: i => go(i) };
+    const hero = fig.closest(".stage-hero");
+    if (hero) {
+      const figs = [...hero.querySelectorAll(".phone")];
+      return { items: figs.map(f => { const im = f.querySelector("img"); return [im.dataset.shot, im.alt.split(":")[0]]; }), index: figs.indexOf(fig) };
+    }
+    if (fig.dataset.group) {
+      const list = fig.dataset.group.split("|").map(x => x.split(":"));
+      return { items: list, index: Math.max(0, list.findIndex(([s]) => s === img.dataset.shot)), sync: i => swap(img, list[i][0]) };
+    }
+    const tabs = [...(fig.closest("section")?.querySelectorAll(".eps [data-shot], .chips [data-shot]") || [])];
+    if (tabs.length)
+      return {
+        items: tabs.map(t => [t.dataset.shot, (t.querySelector("b") || t).textContent.trim()]),
+        index: Math.max(0, tabs.findIndex(t => t.dataset.shot === img.dataset.shot)),
+        sync: i => tabs[i].click(),
+      };
+    return { items: [[img.dataset.shot, img.alt]], index: 0 };
+  };
+
+  const showLb = () => {
+    const { items: list, index: i } = group;
+    document.getElementById("lb-title").textContent = list[i][1];
+    document.getElementById("lb-count").textContent = `${i + 1} / ${list.length}`;
+    document.getElementById("lb-prev").disabled = i === 0;
+    document.getElementById("lb-next").disabled = i === list.length - 1;
+    lbImg.alt = list[i][1];
+    [i - 1, i + 1].forEach(j => list[j] && preload(src(list[j][0])));
+  };
+  const step = d => {
+    const i = Math.max(0, Math.min(group.items.length - 1, group.index + d));
+    if (i === group.index) return;
+    group.index = i;
+    swap(lbImg, group.items[i][0]);
+    group.sync?.(i);
+    showLb();
+  };
+
   document.addEventListener("click", e => {
     const fig = e.target.closest(".phone");
-    if (!fig || fig.closest("#theme-grid")) return;
-    const img = fig.querySelector("img");
-    box.querySelector("img").src = img.currentSrc || img.src;
-    box.querySelector("img").alt = img.alt;
+    if (!fig || fig.closest("#theme-grid, #lightbox")) return;
+    group = groupFor(fig);
+    const shot = group.items[group.index][0];
+    lbImg._swap = (lbImg._swap || 0) + 1; // отменить незаконченную смену от прошлого открытия
+    lbImg.classList.remove("fading");
+    lbImg.dataset.shot = shot;
+    lbImg.src = src(shot);
+    box.classList.toggle("single", group.items.length < 2);
+    showLb();
     box.showModal();
   });
-  box.addEventListener("click", e => { if (e.target === box) box.close(); });
+  document.getElementById("lb-prev").addEventListener("click", () => step(-1));
+  document.getElementById("lb-next").addEventListener("click", () => step(1));
+  box.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight") { e.preventDefault(); step(1); }
+    if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
+  });
+
+  // Свайп: кадр едет за пальцем (или мышью), дальше 50 px — листание.
+  // Нажатие мимо кадра без перетаскивания закрывает просмотр.
+  let sw0 = null;
+  stage.addEventListener("pointerdown", e => {
+    if (e.button > 0) return;
+    sw0 = { x: e.clientX, dx: 0, id: e.pointerId };
+  });
+  stage.addEventListener("pointermove", e => {
+    if (!sw0 || e.pointerId !== sw0.id || group.items.length < 2) return;
+    sw0.dx = e.clientX - sw0.x;
+    if (Math.abs(sw0.dx) > 6) {
+      if (!stage.classList.contains("dragging")) { stage.classList.add("dragging"); stage.setPointerCapture(e.pointerId); }
+      // У края группы кадр тянется туже — понятно, что дальше листать некуда
+      const edge = (sw0.dx > 0 && group.index === 0) || (sw0.dx < 0 && group.index === group.items.length - 1);
+      lbImg.style.transform = `translateX(${edge ? sw0.dx / 3 : sw0.dx}px)`;
+    }
+  });
+  const endSwipe = e => {
+    if (!sw0 || e.pointerId !== sw0.id) return;
+    const { dx } = sw0, dragged = stage.classList.contains("dragging");
+    sw0 = null;
+    stage.classList.remove("dragging");
+    lbImg.style.transform = "";
+    if (dragged && Math.abs(dx) > 50) step(dx < 0 ? 1 : -1);
+    else if (!dragged && e.type === "pointerup" && e.target === stage) box.close();
+  };
+  stage.addEventListener("pointerup", endSwipe);
+  stage.addEventListener("pointercancel", endSwipe);
 
   // Появление при прокрутке
   const io = new IntersectionObserver(entries => entries.forEach(en => {
