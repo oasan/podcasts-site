@@ -136,7 +136,7 @@ nav.links a:hover, nav.links a.on { color: var(--text-primary); }
   width: 100%; height: 100%; object-fit: cover;
   border-radius: calc(var(--w, 290px) * .1);
   background: var(--bg-bottom);
-  transition: opacity .25s;
+  transition: opacity .25s ease;
 }
 .phone img.fading { opacity: 0; }
 
@@ -298,7 +298,7 @@ h2 { font-size: clamp(30px, 3.7vw, 44px); line-height: 1.1; letter-spacing: -.02
 .notes span { color: var(--text-secondary); font-size: 16px; }
 
 /* ---------- Оформление: таблица 2 × 3 ---------- */
-.tgrid { display: grid; grid-template-columns: auto repeat(3, 1fr); gap: 14px 18px; margin-top: 52px; align-items: center; justify-items: center; }
+.tgrid { display: grid; grid-template-columns: auto repeat(3, 1fr); gap: 14px 18px; max-width: 750px; margin: 52px auto 0; align-items: center; justify-items: center; }
 .tgrid .hd { font-size: 14px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
 .tgrid .hd svg { width: 15px; height: 15px; }
 .tgrid .rl { justify-self: end; writing-mode: vertical-rl; rotate: 180deg; font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
@@ -901,16 +901,50 @@ dialog.lightbox button { width: 44px; height: 44px; border-radius: 50%; border: 
     root.dataset.palette = p; root.dataset.bg = b;
     try { localStorage.setItem("podcasts-theme", JSON.stringify({ palette: p, bg: b })); } catch (e) {}
     paint();
+    idle(preloadTabs);
   }
   document.querySelectorAll("[data-set-palette]").forEach(b => b.addEventListener("click", () => apply(b.dataset.setPalette, root.dataset.bg)));
   document.querySelectorAll("[data-set-bg]").forEach(b => b.addEventListener("click", () => apply(root.dataset.palette, b.dataset.setBg)));
   paint();
 
   // Смена скриншота с затуханием
+  // Кадры вкладок заранее скачиваются и декодируются: промис на каждый адрес
+  const ready = new Map();
+  const preload = url => {
+    if (!ready.has(url)) {
+      const im = new Image();
+      im.decoding = "async";
+      im.src = url;
+      ready.set(url, im.decode().catch(() => {}));
+    }
+    return ready.get(url);
+  };
+  // Все кадры, на которые переключают вкладки и примеры, — в текущей теме
+  const preloadTabs = () => document.querySelectorAll("[role=tab][data-shot], [role=radio][data-shot]")
+    .forEach(el => preload(src(el.dataset.shot)));
+  const idle = fn => ("requestIdleCallback" in window ? requestIdleCallback(fn, { timeout: 2000 }) : setTimeout(fn, 300));
+  if (document.readyState === "complete") idle(preloadTabs);
+  else addEventListener("load", () => idle(preloadTabs));
+
+  // Смена скриншота: старый кадр гаснет до тёмного экрана телефона,
+  // новый проявляется, только когда скачан и декодирован. Быстрые повторные
+  // нажатия отменяют предыдущую смену — показывается последняя.
   const swap = (img, shot) => {
     if (img.dataset.shot === shot) return;
+    img.dataset.shot = shot;
+    const url = src(shot), token = img._swap = (img._swap || 0) + 1;
     img.classList.add("fading");
-    setTimeout(() => { img.dataset.shot = shot; img.src = src(shot); img.classList.remove("fading"); }, 180);
+    const faded = new Promise(r => setTimeout(r, 250));
+    // Страховка от зависшей загрузки: через 4 с показываем как есть
+    const loaded = Promise.race([preload(url), new Promise(r => setTimeout(r, 4000))]);
+    Promise.all([loaded, faded]).then(() => {
+      if (img._swap !== token) return;
+      img.loading = "eager";
+      img.src = url;
+      // Кадр уже декодирован в кэше — проявляем сразу после подстановки.
+      // Таймер, а не requestAnimationFrame: тот не срабатывает в фоновой вкладке.
+      setTimeout(() => { if (img._swap === token) img.classList.remove("fading"); }, 30);
+    });
   };
 
   // ---------- Строки-вкладки: меняют текст и скриншот рядом ----------
