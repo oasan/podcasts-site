@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="ru" data-palette="cool" data-bg="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Подкасты — плеер подкастов для Android</title>
+<meta name="description" content="Плеер подкастов для Android: каталог Apple Podcasts и любые RSS-ленты, одна лента новых выпусков, скачивание, очередь и своя скорость у каждого подкаста. Без аккаунта и рекламы.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1254 1254'%3E%3Crect width='1254' height='1254' rx='290' fill='%232B7D8E'/%3E%3Cg fill='%23fff'%3E%3Cpath d='M304,612 L345,612 A50,50 0 0,1 395,662 L395,885 A50,50 0 0,1 345,935 L304,935 A90,90 0 0,1 214,845 L214,702 A90,90 0 0,1 304,612 Z'/%3E%3Cpath d='M950,612 L909,612 A50,50 0 0,0 859,662 L859,885 A50,50 0 0,0 909,935 L950,935 A90,90 0 0,0 1040,845 L1040,702 A90,90 0 0,0 950,612 Z'/%3E%3Cpath d='M463,660 A35,35 0 0,1 533,660 L533,842 A35,35 0 0,1 463,842 Z'/%3E%3Cpath d='M591,571 A36,36 0 0,1 663,571 L663,924 A36,36 0 0,1 591,924 Z'/%3E%3Cpath d='M721,660 A35,35 0 0,1 791,660 L791,842 A35,35 0 0,1 721,842 Z'/%3E%3C/g%3E%3Cpath fill='none' stroke='%23fff' stroke-width='64' d='M309,622 L309,607 A318,318 0 0,1 945,607 L945,622'/%3E%3C/svg%3E">
+<style>
+@font-face { font-family: "Golos Text"; src: url("fonts/GolosText-VariableFont_wght.ttf") format("truetype"); font-weight: 400 900; font-display: swap; }
+@font-face { font-family: "JetBrains Mono"; src: url("fonts/JetBrainsMono-VariableFont_wght.ttf") format("truetype"); font-weight: 100 800; font-display: swap; }
+
+/* Цвета — роли из Color.kt приложения (палитры всех тем). */
+:root, [data-palette="cool"][data-bg="light"] {
+  color-scheme: light;
+  --accent: #2B7D8E; --accent-pressed: #24697A; --on-accent: #FFFFFF;
+  --text-primary: #16232B; --text-secondary: #5F727C; --icon-muted: #93A7AE;
+  --bg-top: #F8FBFC; --bg-bottom: #EDF4F5;
+  --surface: #FFFFFF; --sheet: #F6FAFB; --quiet: #EAF1F2; --quiet-text: #3D5058;
+  --groove: #DDE8EA; --divider: #16232B17; --rail: #9DBFC7; --done: #5F727C;
+  --glow: #2B7D8E22;
+}
+[data-palette="cool"][data-bg="dark"], [data-palette="cool"][data-bg="black"] {
+  color-scheme: dark;
+  --accent: #4FB3C6; --accent-pressed: #3D97A9; --on-accent: #07141A;
+  --text-primary: #E8F1F3; --text-secondary: #8EA3AB; --icon-muted: #74898F;
+  --bg-top: #101B21; --bg-bottom: #0A1317;
+  --surface: #2A3B43; --sheet: #17242B; --quiet: #1C2A31; --quiet-text: #B6C7CD;
+  --groove: #22323A; --divider: #E8F1F317; --rail: #35707C; --done: #8EA3AB;
+  --glow: #4FB3C61f;
+}
+[data-palette="warm"][data-bg="light"] {
+  color-scheme: light;
+  --accent: #C0562B; --accent-pressed: #A24521; --on-accent: #FFFFFF;
+  --text-primary: #251A13; --text-secondary: #7D6857; --icon-muted: #A89180;
+  --bg-top: #FDF9F2; --bg-bottom: #F7EEE2;
+  --surface: #FFFFFF; --sheet: #FCF7EE; --quiet: #F6EBDA; --quiet-text: #4E3A2D;
+  --groove: #ECDDCA; --divider: #482C1A17; --rail: #E8A97E; --done: #7D6857;
+  --glow: #C0562B22;
+}
+[data-palette="warm"][data-bg="dark"], [data-palette="warm"][data-bg="black"] {
+  color-scheme: dark;
+  --accent: #E8A97E; --accent-pressed: #D58C60; --on-accent: #251A13;
+  --text-primary: #F5EADE; --text-secondary: #B8A18E; --icon-muted: #96806E;
+  --bg-top: #211A15; --bg-bottom: #17110D;
+  --surface: #433329; --sheet: #2B211A; --quiet: #31261E; --quiet-text: #D8C3AD;
+  --groove: #3A2D23; --divider: #F5EADE17; --rail: #986440; --done: #B8A18E;
+  --glow: #E8A97E1f;
+}
+/* Цвета знака — по иконке приложения (ТЗ 14): не зависят от фона. */
+[data-palette="cool"] { --logo-bg: #2B7D8E; --logo-fg: #FFFFFF; }
+[data-palette="warm"] { --logo-bg: #C0562B; --logo-fg: #FDF9F2; }
+/* Чёрный фон, как в приложении: меняется только фон, панели остаются тёмными.
+   Селектор из двух атрибутов — иначе правило палитры выше перебивает его по специфичности. */
+[data-palette][data-bg="black"] { --bg-top: #000000; --bg-bottom: #000000; --sheet: #0E0B09; --quiet: #1A1512; }
+[data-palette="cool"][data-bg="black"] { --sheet: #0A1013; --quiet: #141E23; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+body {
+  margin: 0;
+  font-family: "Golos Text", system-ui, sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-bottom);
+  background-image: linear-gradient(180deg, var(--bg-top), var(--bg-bottom) 50%);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+img { display: block; max-width: 100%; }
+a { color: var(--accent); }
+.mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+@media (max-width: 600px) { .wrap { padding: 0 16px; } }
+
+/* ---------- Шапка со шкалой выпуска ---------- */
+header.top {
+  position: sticky; top: 0; z-index: 20;
+  backdrop-filter: blur(14px) saturate(1.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  background: color-mix(in srgb, var(--bg-top) 80%, transparent);
+}
+.top .wrap { display: flex; align-items: center; gap: 24px; height: 62px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; text-decoration: none; color: var(--text-primary); }
+.brand svg { width: 32px; height: 32px; }
+nav.links { display: flex; gap: 22px; margin-left: auto; }
+nav.links a { color: var(--text-secondary); text-decoration: none; font-size: 15px; }
+nav.links a:hover, nav.links a.on { color: var(--text-primary); }
+.clock { font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--text-secondary); white-space: nowrap; width: 13.5em; overflow: hidden; text-overflow: ellipsis; }
+.clock b { color: var(--text-primary); font-weight: 500; }
+@media (max-width: 1060px) { .clock { display: none; } }
+@media (max-width: 860px) { nav.links { display: none; } }
+
+/* Прокрутка страницы — как шкала выпуска: насечки — начала разделов */
+.scrub { position: relative; height: 3px; background: var(--groove); }
+.scrub .fill { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--accent); }
+.scrub .notch { position: absolute; top: -3px; width: 2px; height: 9px; border-radius: 1px; background: var(--rail); translate: -1px 0; }
+.scrub .thumb { position: absolute; top: 50%; left: 0; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); translate: -50% -50%; box-shadow: 0 0 0 3px var(--bg-top); }
+
+.switcher { display: flex; gap: 6px; align-items: center; }
+@media (max-width: 860px) { .switcher { margin-left: auto; } }
+.swatch { width: 26px; height: 26px; border-radius: 8px; border: 2px solid transparent; cursor: pointer; padding: 0; outline-offset: 2px; }
+.swatch[aria-pressed="true"] { border-color: var(--text-primary); }
+.swatch.cool { background: #2B7D8E; }
+.swatch.warm { background: #C0562B; }
+.seg { display: inline-flex; background: var(--quiet); border-radius: 10px; padding: 3px; margin-left: 4px; }
+.seg button { border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; width: 30px; height: 26px; border-radius: 8px; display: grid; place-items: center; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--text-primary); box-shadow: 0 1px 3px #0002; }
+.seg svg { width: 16px; height: 16px; }
+
+/* ---------- Кнопки ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 10px; font: inherit; font-weight: 600; font-size: 16px;
+  padding: 14px 22px; border-radius: 16px; text-decoration: none; cursor: pointer; border: 0;
+  transition: transform .15s, background-color .2s;
+}
+.btn:active { transform: scale(.97); }
+.btn.primary { background: var(--accent); color: var(--on-accent); box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--accent) 45%, transparent); }
+.btn.primary:hover { background: var(--accent-pressed); }
+.btn.quiet { background: var(--quiet); color: var(--quiet-text); }
+.btn svg { width: 20px; height: 20px; }
+.btn .label { display: flex; flex-direction: column; gap: 2px; text-align: left; line-height: 1.3; }
+.btn .version { font-size: 12px; font-weight: 400; opacity: .8; font-family: "JetBrains Mono", monospace; }
+
+/* ---------- Телефон ---------- */
+.phone {
+  position: relative; margin: 0;
+  width: var(--w, 290px); aspect-ratio: 2160 / 4848;
+  border-radius: calc(var(--w, 290px) * .12);
+  padding: calc(var(--w, 290px) * .022);
+  background: #101214;
+  box-shadow: 0 0 0 1px #ffffff1a inset, 0 0 0 1px var(--divider), 0 24px 50px -20px #0007, 0 50px 110px -40px var(--glow);
+  cursor: zoom-in;
+}
+.phone img {
+  width: 100%; height: 100%; object-fit: cover;
+  border-radius: calc(var(--w, 290px) * .1);
+  background: var(--bg-bottom);
+  transition: opacity .25s;
+}
+.phone img.fading { opacity: 0; }
+
+/* ---------- Главы: таймкод вместо надзаголовка ---------- */
+.chap { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; font-size: 15px; font-weight: 600; color: var(--accent); }
+.tc {
+  font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 500; letter-spacing: .02em;
+  padding: 3px 8px; border-radius: 7px; background: var(--quiet); color: var(--quiet-text);
+}
+
+/* ---------- Первый экран ---------- */
+.hero { padding: 64px 0 48px; position: relative; overflow: hidden; }
+.hero .wrap { display: grid; grid-template-columns: 1fr 1.05fr; gap: 32px; align-items: center; }
+.hero h1 { font-size: clamp(38px, 5.2vw, 62px); line-height: 1.04; letter-spacing: -.028em; margin: 0 0 22px; font-weight: 760; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero .lead { font-size: clamp(17px, 1.6vw, 19px); color: var(--text-secondary); max-width: 30em; margin: 0 0 32px; }
+.hero .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+.facts { display: flex; margin-top: 40px; border-top: 1px solid var(--divider); padding-top: 22px; max-width: 520px; }
+.facts div { flex: 1; font-size: 14px; color: var(--text-secondary); line-height: 1.35; padding-right: 14px; }
+.facts div + div { padding-left: 18px; border-left: 1px solid var(--divider); }
+.facts b { display: block; font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 24px; color: var(--text-primary); margin-bottom: 4px; }
+
+.stage-hero { position: relative; height: 640px; }
+.stage-hero .phone { position: absolute; }
+.stage-hero .c { --w: 280px; left: 50%; translate: -50% 0; top: 0; z-index: 2; }
+.stage-hero .l { --w: 215px; left: 0; top: 90px; z-index: 1; }
+.stage-hero .r { --w: 215px; right: 0; top: 90px; z-index: 1; }
+.stage-hero .l img, .stage-hero .r img { filter: saturate(.85); }
+/* Волны от центрального телефона — как дуга над наушниками в иконке */
+.waves { position: absolute; left: 50%; top: 46%; width: 0; height: 0; z-index: 0; pointer-events: none; }
+.waves span {
+  position: absolute; left: 0; top: 0; width: 760px; height: 760px; translate: -50% -50%;
+  border-radius: 50%; border: 1.5px solid var(--accent); opacity: 0;
+  animation: ripple 9s linear infinite;
+}
+.waves span:nth-child(2) { animation-delay: -3s; }
+.waves span:nth-child(3) { animation-delay: -6s; }
+@keyframes ripple { 0% { scale: .3; opacity: 0; } 15% { opacity: .35; } 100% { scale: 1.15; opacity: 0; } }
+@media (max-width: 960px) {
+  .hero { padding-top: 36px; }
+  .hero .wrap { grid-template-columns: 1fr; }
+  .stage-hero { height: 540px; max-width: 520px; width: 100%; margin: 0 auto; }
+  .stage-hero .c { --w: 236px; }
+  .stage-hero .l, .stage-hero .r { --w: 180px; top: 80px; }
+}
+@media (max-width: 480px) {
+  .stage-hero { height: 470px; }
+  .stage-hero .c { --w: 200px; }
+  .stage-hero .l, .stage-hero .r { --w: 150px; top: 70px; }
+  .stage-hero .l { left: -24px; } .stage-hero .r { right: -24px; }
+  .facts b { font-size: 20px; }
+}
+
+/* ---------- Секции ---------- */
+section.block { padding: 104px 0; }
+@media (max-width: 700px) { section.block { padding: 68px 0; } }
+h2 { font-size: clamp(30px, 3.7vw, 44px); line-height: 1.1; letter-spacing: -.022em; margin: 0 0 20px; font-weight: 720; }
+.sub { color: var(--text-secondary); font-size: 18px; max-width: 36em; margin: 0; }
+/* Полоса-шит: раздел приподнят над фоном, как шит в приложении */
+.band { background: var(--sheet); border-block: 1px solid var(--divider); }
+
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+.split.flip > :first-child { order: 2; }
+@media (max-width: 900px) { .split, .split.flip { grid-template-columns: 1fr; gap: 40px; } .split.flip > :first-child { order: 0; } }
+.stage { display: flex; justify-content: center; position: relative; }
+
+/* Переключатель экранов — строками выпусков, как в ленте приложения */
+.eps { display: grid; gap: 2px; margin: 28px 0 18px; max-width: 480px; }
+.eps button {
+  font: inherit; color: inherit; text-align: left; border: 0; background: transparent; cursor: pointer;
+  display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: center;
+  padding: 9px 14px 9px 9px; border-radius: 16px; transition: background-color .2s;
+}
+.eps button:hover { background: var(--quiet); }
+.eps button[aria-selected="true"] { background: var(--surface); box-shadow: 0 1px 2px #0000000d, 0 10px 24px -14px #0004; }
+.eps .pi { width: 40px; height: 40px; border-radius: 50%; background: var(--quiet); color: var(--accent); display: grid; place-items: center; }
+.eps .pi svg { width: 18px; height: 18px; margin-left: 2px; }
+.eps .pi .eq { display: none; }
+.eps button[aria-selected="true"] .pi { background: var(--accent); color: var(--on-accent); }
+.eps button[aria-selected="true"] .pi svg { display: none; }
+.eps button[aria-selected="true"] .pi .eq { display: flex; }
+.eps b { display: block; font-weight: 600; font-size: 16px; line-height: 1.3; }
+.eps small { display: block; font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--text-secondary); line-height: 1.4; margin-top: 2px; }
+/* Значок «играет» — три полоски, как у текущего выпуска в очереди */
+.eq { gap: 2.5px; align-items: flex-end; height: 14px; }
+.eq i { width: 3px; border-radius: 2px; background: currentColor; animation: eq 1.1s ease-in-out infinite; }
+.eq i:nth-child(1) { height: 60%; animation-delay: -.3s; }
+.eq i:nth-child(2) { height: 100%; animation-delay: -.7s; }
+.eq i:nth-child(3) { height: 45%; animation-delay: -.1s; }
+@keyframes eq { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
+.eq i { transform-origin: bottom; }
+.tabpanel[hidden] { display: none; }
+.tabpanel { max-width: 480px; }
+.tabpanel p { margin: 0 0 12px; color: var(--text-secondary); font-size: 17px; }
+.tabpanel p b { color: var(--text-primary); font-weight: 600; }
+
+.points { list-style: none; padding: 0; margin: 30px 0 0; display: grid; gap: 18px; max-width: 520px; }
+.points li { display: grid; grid-template-columns: 36px 1fr; gap: 14px; align-items: start; }
+.points .ic { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--rail); color: var(--accent); display: grid; place-items: center; }
+.points .ic svg { width: 18px; height: 18px; }
+.points b { display: block; font-weight: 600; }
+.points span { color: var(--text-secondary); font-size: 16px; }
+
+/* ---------- Новая подписка: что считать прослушанным ---------- */
+.archive { background: var(--surface); border: 1px solid var(--divider); border-radius: 24px; padding: 22px; margin-top: 32px; box-shadow: 0 20px 50px -30px #0003; }
+.arch-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chips button {
+  font: inherit; font-family: "JetBrains Mono", monospace; font-size: 13px; border: 0; cursor: pointer;
+  padding: 9px 14px; border-radius: 12px; background: var(--quiet); color: var(--quiet-text);
+}
+.chips button[aria-checked="true"] { background: var(--accent); color: var(--on-accent); }
+.stepper { display: flex; align-items: center; gap: 10px; transition: opacity .2s; }
+.stepper[aria-disabled="true"] { opacity: .35; pointer-events: none; }
+.stepper button { width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--quiet); color: var(--text-primary); font-size: 20px; cursor: pointer; display: grid; place-items: center; }
+.stepper output { font-family: "JetBrains Mono", monospace; font-size: 18px; min-width: 2ch; text-align: center; }
+.cells { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
+.cells button {
+  font: inherit; font-family: "JetBrains Mono", monospace; font-size: 11px; aspect-ratio: 1.25; border: 0; padding: 0; cursor: pointer;
+  border-radius: 8px; background: var(--accent); color: var(--on-accent); transition: background-color .25s, color .25s;
+  position: relative;
+}
+.cells button.played { background: var(--groove); color: var(--done); }
+.cells button.played::after { content: "✓"; position: absolute; top: 1px; right: 4px; font-size: 9px; opacity: .8; }
+.cells button.edge { box-shadow: 0 0 0 2px var(--bg-top), 0 0 0 4px var(--accent); }
+.arch-foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; font-size: 14px; color: var(--text-secondary); }
+.arch-foot .mono { color: var(--text-primary); }
+@media (max-width: 520px) { .cells button { font-size: 9px; border-radius: 6px; } .cells { gap: 4px; } .archive { padding: 16px; } }
+
+/* ---------- Мелочи: повтор в названиях и список ---------- */
+.details { display: grid; grid-template-columns: 1.1fr 1fr; gap: 56px; margin-top: 48px; align-items: start; }
+@media (max-width: 900px) { .details { grid-template-columns: 1fr; gap: 40px; } }
+.prefix { background: var(--surface); border: 1px solid var(--divider); border-radius: 24px; padding: 8px 0 4px; box-shadow: 0 20px 50px -30px #0003; }
+.prefix .row-h { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 20px 16px; border-bottom: 1px solid var(--divider); }
+.prefix .row-h b { font-weight: 600; }
+.prefix .row-h small { display: block; font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.switch { flex: none; width: 52px; height: 30px; border-radius: 99px; border: 0; padding: 0; cursor: pointer; background: var(--groove); position: relative; transition: background-color .2s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px #0003; transition: translate .2s; }
+.switch[aria-checked="true"] { background: var(--accent); }
+.switch[aria-checked="true"]::after { translate: 22px 0; }
+.ep { display: grid; grid-template-columns: 48px 1fr; gap: 14px; align-items: center; padding: 12px 20px; }
+.ep + .ep { border-top: 1px solid var(--divider); }
+.ep .cover {
+  width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center;
+  font-weight: 700; font-size: 20px; color: var(--text-secondary);
+  background: repeating-linear-gradient(45deg, var(--groove) 0 8px, var(--quiet) 8px 16px);
+}
+.ep b { display: block; font-weight: 600; font-size: 15.5px; line-height: 1.35; }
+.ep small { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--text-secondary); }
+.ep .pre { display: inline-block; vertical-align: bottom; white-space: pre; overflow: hidden; max-width: 12em; color: var(--accent); transition: max-width .45s cubic-bezier(.2,.8,.2,1), opacity .3s; }
+.prefix.on .ep .pre { max-width: 0; opacity: 0; }
+
+.notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.notes li { display: grid; grid-template-columns: 30px 1fr; gap: 14px; padding: 18px 0; border-top: 1px solid var(--divider); }
+.notes li:first-child { border-top: 0; padding-top: 4px; }
+.notes .ic { color: var(--accent); padding-top: 2px; }
+.notes .ic svg { width: 22px; height: 22px; }
+.notes b { display: block; font-weight: 600; font-size: 17px; margin-bottom: 2px; }
+.notes span { color: var(--text-secondary); font-size: 16px; }
+
+/* ---------- Оформление: таблица 2 × 3 ---------- */
+.tgrid { display: grid; grid-template-columns: auto repeat(3, 1fr); gap: 14px 18px; margin-top: 52px; align-items: center; justify-items: center; }
+.tgrid .hd { font-size: 14px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+.tgrid .hd svg { width: 15px; height: 15px; }
+.tgrid .rl { justify-self: end; writing-mode: vertical-rl; rotate: 180deg; font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.tgrid .rl i { width: 12px; height: 12px; border-radius: 4px; }
+.tgrid button { all: unset; cursor: pointer; border-radius: 26px; padding: 12px; transition: background-color .2s; }
+.tgrid button:focus-visible { outline: 2px solid var(--accent); }
+.tgrid button:hover, .tgrid button[aria-pressed="true"] { background: var(--quiet); }
+.tgrid .phone { --w: 170px; cursor: pointer; transition: transform .25s; }
+.tgrid button:hover .phone { transform: translateY(-5px); }
+.tgrid button[aria-pressed="true"] .phone { box-shadow: 0 0 0 3px var(--accent), 0 24px 50px -20px #0007; }
+@media (max-width: 760px) {
+  .tgrid { grid-template-columns: auto repeat(3, minmax(0, 1fr)); gap: 8px 4px; }
+  .tgrid .phone { --w: min(170px, calc((100vw - 104px) / 3)); }
+  .tgrid button { padding: 4px; border-radius: 16px; }
+  .tgrid .rl { font-size: 13px; }
+  .tgrid .hd { font-size: 12.5px; }
+}
+
+/* ---------- Карусель экранов ---------- */
+.slider { position: relative; margin-top: 30px; --sw: 240px; }
+@media (max-width: 600px) { .slider { --sw: 200px; } }
+.reel {
+  display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scrollbar-width: none;
+  /* Лента с прокруткой обрезает всё, что выходит за край, — и тень телефона.
+     Запас снизу под тень, отрицательный margin его компенсирует. */
+  padding: 40px calc(50% - var(--sw) / 2) 130px;
+  margin-bottom: -100px;
+  cursor: grab; user-select: none; -webkit-user-select: none;
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.reel::-webkit-scrollbar { display: none; }
+.reel.dragging { cursor: grabbing; scroll-snap-type: none; }
+.reel .item {
+  scroll-snap-align: center; flex: none; width: var(--sw); display: grid; justify-items: center;
+  transform: scale(var(--s, .78)); opacity: var(--o, .45); filter: saturate(var(--sat, .6));
+  transition: transform .12s linear, opacity .12s linear; will-change: transform;
+}
+.reel .phone { --w: var(--sw); cursor: pointer; }
+.reel .item.active .phone { cursor: zoom-in; }
+.reel img { pointer-events: none; -webkit-user-drag: none; }
+.reel-bar { position: relative; z-index: 1; max-width: 560px; margin: 4px auto 0; padding: 0 16px; }
+.reel-row { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; gap: 12px; }
+.reel-row .arrow {
+  width: 48px; height: 48px; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--quiet); color: var(--text-primary); display: grid; place-items: center;
+  transition: background-color .2s, transform .15s, opacity .2s;
+}
+.reel-row .arrow:hover { background: var(--accent); color: var(--on-accent); }
+.reel-row .arrow:active { transform: scale(.92); }
+.reel-row .arrow:disabled { opacity: .35; pointer-events: none; }
+.reel-row .arrow svg { width: 22px; height: 22px; }
+.reel-cap { text-align: center; }
+.reel-cap b { display: block; font-size: 18px; font-weight: 600; }
+/* Шкала карусели — как шкала выпуска: насечки — экраны */
+.rscrub { position: relative; height: 28px; margin-top: 10px; }
+.rscrub .groove { position: absolute; left: 0; right: 0; top: 50%; height: 4px; translate: 0 -50%; border-radius: 99px; background: var(--groove); }
+.rscrub .fill { position: absolute; left: 0; top: 50%; height: 4px; translate: 0 -50%; border-radius: 99px; background: var(--accent); transition: width .3s; }
+.rscrub .thumb { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); translate: -50% -50%; transition: left .3s; pointer-events: none; }
+.rscrub button { position: absolute; top: 0; width: 16px; height: 28px; translate: -50% 0; border: 0; padding: 0; background: transparent; cursor: pointer; }
+.rscrub button::before { content: ""; position: absolute; left: 50%; top: 50%; width: 2px; height: 10px; translate: -50% -50%; border-radius: 1px; background: var(--rail); }
+.reel-time { display: flex; justify-content: space-between; font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--text-secondary); }
+@media (prefers-reduced-motion: reduce) { .reel .item { transition: none; } }
+
+/* ---------- Финал ---------- */
+.final { text-align: center; padding: 120px 0 100px; }
+.final .icon { width: 96px; height: 96px; margin: 0 auto 28px; filter: drop-shadow(0 18px 30px var(--glow)); }
+.final .sub { margin: 0 auto 34px; }
+.final .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.final .req { margin: 22px auto 0; font-size: 14px; color: var(--text-secondary); max-width: 34em; }
+.final .req + .req { margin-top: 6px; }
+
+footer { border-top: 1px solid var(--divider); padding: 30px 0 40px; color: var(--text-secondary); font-size: 14px; }
+footer .wrap { display: flex; gap: 20px; flex-wrap: wrap; justify-content: space-between; align-items: center; }
+footer a { color: inherit; }
+.stack { display: flex; gap: 8px; flex-wrap: wrap; }
+.stack span { font-family: "JetBrains Mono", monospace; font-size: 12px; padding: 4px 10px; border-radius: 8px; background: var(--quiet); color: var(--quiet-text); }
+
+/* Появление при прокрутке */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s, transform .8s cubic-bezier(.2,.8,.2,1); }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  html { scroll-behavior: auto; }
+  .waves span, .eq i { animation: none; }
+  .waves span { opacity: .15; }
+}
+
+/* Просмотр скриншота */
+dialog.lightbox { border: 0; padding: 0; background: transparent; max-width: none; max-height: none; }
+dialog.lightbox::backdrop { background: #000c; backdrop-filter: blur(6px); }
+dialog.lightbox img { height: min(88vh, 940px); width: auto; border-radius: 28px; }
+dialog.lightbox form { position: fixed; top: 16px; right: 16px; }
+dialog.lightbox button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: #fff2; color: #fff; font-size: 22px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Знак по иконке приложения: наушники и три звуковые полосы -->
+    <symbol id="logo" viewBox="0 0 1254 1254">
+      <rect width="1254" height="1254" rx="290" fill="var(--logo-bg)"/>
+      <g fill="var(--logo-fg)">
+        <path d="M304,612 L345,612 A50,50 0 0,1 395,662 L395,885 A50,50 0 0,1 345,935 L304,935 A90,90 0 0,1 214,845 L214,702 A90,90 0 0,1 304,612 Z"/>
+        <path d="M950,612 L909,612 A50,50 0 0,0 859,662 L859,885 A50,50 0 0,0 909,935 L950,935 A90,90 0 0,0 1040,845 L1040,702 A90,90 0 0,0 950,612 Z"/>
+        <path d="M463,660 A35,35 0 0,1 533,660 L533,842 A35,35 0 0,1 463,842 Z"/>
+        <path d="M591,571 A36,36 0 0,1 663,571 L663,924 A36,36 0 0,1 591,924 Z"/>
+        <path d="M721,660 A35,35 0 0,1 791,660 L791,842 A35,35 0 0,1 721,842 Z"/>
+      </g>
+      <path fill="none" stroke="var(--logo-fg)" stroke-width="64" d="M309,622 L309,607 A318,318 0 0,1 945,607 L945,622"/>
+    </symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path fill="currentColor" d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></symbol>
+    <symbol id="i-black" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="currentColor"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.5-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></symbol>
+    <symbol id="i-chapter" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3 12h18M5 12v-3M11 12v-3M17 12v-3"/><circle cx="14" cy="12" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-headset" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M5 13a7 7 0 0 1 14 0M5 13v4M19 13v4M3 13h4v6H3zM17 13h4v6h-4z"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.6 16a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19.2" r="1.4" fill="currentColor"/></symbol>
+    <symbol id="i-progress" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3 12h18" opacity=".45"/><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M3 12h10"/><circle cx="13" cy="12" r="3.6" fill="currentColor"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path fill="currentColor" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></symbol>
+    <symbol id="i-move" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7h11M11 3l4 4-4 4M20 17H9M13 13l-4 4 4 4"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/></symbol>
+    <symbol id="i-unsub" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-feed" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M5 5a14 14 0 0 1 14 14M5 11a8 8 0 0 1 8 8"/><circle cx="6" cy="18" r="1.8" fill="currentColor"/></symbol>
+    <symbol id="i-moon-off" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M15 4h4l-4 4h4"/></symbol>
+  </defs>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><svg><use href="#logo"/></svg>Подкасты</a>
+    <nav class="links" aria-label="Разделы">
+      <a href="#feed">Лента</a>
+      <a href="#subscriptions">Подписки</a>
+      <a href="#player">Плеер</a>
+      <a href="#offline">Загрузки</a>
+      <a href="#themes">Темы</a>
+    </nav>
+    <span class="clock" id="clock" aria-hidden="true"><b>00:00</b> · Начало</span>
+    <div class="switcher" role="group" aria-label="Оформление страницы">
+      <button class="swatch cool" data-set-palette="cool" aria-label="Холодная палитра"></button>
+      <button class="swatch warm" data-set-palette="warm" aria-label="Тёплая палитра"></button>
+      <div class="seg">
+        <button data-set-bg="light" aria-label="Светлый фон"><svg><use href="#i-sun"/></svg></button>
+        <button data-set-bg="dark" aria-label="Тёмный фон"><svg><use href="#i-moon"/></svg></button>
+        <button data-set-bg="black" aria-label="Чёрный фон"><svg><use href="#i-black"/></svg></button>
+      </div>
+    </div>
+  </div>
+  <div class="scrub" id="scrub" aria-hidden="true"><i class="fill"></i><i class="thumb"></i></div>
+</header>
+
+<main>
+<!-- ============ Первый экран ============ -->
+<section class="hero" data-chapter="Начало">
+  <div class="wrap">
+    <div>
+      <p class="chap"><span class="tc">00:00</span>Плеер подкастов для Android</p>
+      <h1>Все подписки.<br>Одна лента.<br><em>Без аккаунта.</em></h1>
+      <p class="lead">Найдите подкаст в каталоге Apple Podcasts или добавьте любую RSS-ленту. Новые выпуски соберутся в одну ленту, плеер запомнит место в каждом, а скачанное сыграет без сети. Без регистрации и рекламы.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/oasan/podcasts-site/releases/latest/download/podcasts.apk"><svg aria-hidden="true"><use href="#i-download"/></svg><span class="label">Скачать APK<small class="version">v 1.0.7</small></span></a>
+        <a class="btn quiet" href="#feed">Как это устроено</a>
+      </div>
+      <div class="facts">
+        <div><b>0</b>аккаунтов и рекламы</div>
+        <div><b>RSS</b>любая открытая лента</div>
+        <div><b>6</b>вариантов оформления</div>
+      </div>
+    </div>
+    <div class="stage-hero">
+      <div class="waves" aria-hidden="true"><span></span><span></span><span></span></div>
+      <figure class="phone l"><img data-shot="05-podcasts" alt="Подписки: обложки подкастов в две колонки" fetchpriority="high"></figure>
+      <figure class="phone c"><img data-shot="40-player-chapters-paused" alt="Плеер: обложка, название выпуска, шкала с границами глав, текущая глава и перемотка" fetchpriority="high"></figure>
+      <figure class="phone r"><img data-shot="01-feed" alt="Лента «Новое»: выпуски всех подписок и мини-плеер" fetchpriority="high"></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Лента ============ -->
+<section class="block" id="feed" data-chapter="Лента">
+  <div class="wrap split">
+    <div class="reveal">
+      <p class="chap"><span class="tc">04:10</span>Лента</p>
+      <h2>Всё новое —<br>на одном экране</h2>
+      <p class="sub">Выпуски всех подписок, свежие сверху, по группам: сегодня, на этой неделе, в этом месяце и дальше по месяцам. Приложение само проверяет ленты раз в четыре часа, а свайп вниз обновляет всё сразу.</p>
+      <div class="eps" role="tablist" data-target="feed-phone" aria-label="Экраны ленты">
+        <button role="tab" aria-selected="true" data-shot="01-feed" aria-controls="fd-1"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>Все выпуски</b><small>все подписки · новые сверху</small></span></button>
+        <button role="tab" aria-selected="false" data-shot="02-feed-unplayed" aria-controls="fd-2"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>Непрослушанные</b><small>фильтр по умолчанию</small></span></button>
+        <button role="tab" aria-selected="false" data-shot="03-feed-downloaded" aria-controls="fd-3"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>Загруженные</b><small>играют без сети</small></span></button>
+        <button role="tab" aria-selected="false" data-shot="04-episode-actions" aria-controls="fd-4"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>Панель выпуска</b><small>действия · описание</small></span></button>
+      </div>
+      <div class="tabpanel" id="fd-1" role="tabpanel"><p><b>Подкаст, длительность, дата.</b> Справа — загрузка и play. У начатого выпуска вместо длительности — сколько осталось, а под строкой тонкая шкала прогресса.</p></div>
+      <div class="tabpanel" id="fd-2" role="tabpanel" hidden><p><b>То, что ещё ждёт.</b> Начатые выпуски тоже здесь. Отмеченный выпуск уходит из списка сразу, а «Отменить» возвращает его вместе с позицией.</p></div>
+      <div class="tabpanel" id="fd-3" role="tabpanel" hidden><p><b>Что можно слушать в самолёте.</b> Скачанный выпуск отмечен стрелкой с галочкой — его не спутать с прослушанным, у которого только галочка с подписью.</p></div>
+      <div class="tabpanel" id="fd-4" role="tabpanel" hidden><p><b>Действия — кнопками, а не свайпами.</b> Слушать, следующим, в очередь, скачать, отметить прослушанным. Случайный жест ничего не отметит и не сотрёт.</p><p>Ниже — описание из ленты, ссылки в нём нажимаются.</p></div>
+    </div>
+    <div class="stage reveal"><figure class="phone" style="--w:300px"><img id="feed-phone" data-shot="01-feed" alt="Лента новых выпусков" loading="lazy"></figure></div>
+  </div>
+</section>
+
+<!-- ============ Подписки ============ -->
+<section class="block" id="subscriptions" style="padding-top:40px" data-chapter="Подписки">
+  <div class="wrap split flip">
+    <div class="reveal">
+      <p class="chap"><span class="tc">09:45</span>Подписки</p>
+      <h2>Каталог Apple<br>или любая RSS-лента</h2>
+      <p class="sub">Ищите по названию и автору или вставьте ссылку на ленту — дальше путь один: карточка подкаста, где выпуски можно послушать ещё до подписки.</p>
+      <div class="eps" role="tablist" data-target="subs-phone" aria-label="Экраны подписок">
+        <button role="tab" aria-selected="true" data-shot="28-search-verge" aria-controls="sb-1"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>Поиск</b><small>каталог Apple Podcasts</small></span></button>
+        <button role="tab" aria-selected="false" data-shot="31-add-rss-filled" aria-controls="sb-2"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>По ссылке RSS</b><small>то, чего нет в каталоге</small></span></button>
+        <button role="tab" aria-selected="false" data-shot="13-podcast-card" aria-controls="sb-3"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>Карточка подкаста</b><small>послушать до подписки</small></span></button>
+        <button role="tab" aria-selected="false" data-shot="05-podcasts" aria-controls="sb-4"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>Мои подписки</b><small>сетка · 4 сортировки</small></span></button>
+      </div>
+      <div class="tabpanel" id="sb-1" role="tabpanel"><p><b>Поиск по каталогу Apple Podcasts.</b> До ввода — популярное в России. Подкасты, на которые вы уже подписаны, отмечены галочкой.</p></div>
+      <div class="tabpanel" id="sb-2" role="tabpanel" hidden><p><b>Любая открытая лента.</b> Вставьте адрес — приложение проверит ленту и скажет по-человечески, если что-то не так: «сервер подкаста не отвечает» или «по адресу страница, а не лента».</p><p>Сменил подкаст адрес — подписка переедет за ним сама, без дублей.</p></div>
+      <div class="tabpanel" id="sb-3" role="tabpanel" hidden><p><b>Сначала послушать, потом решать.</b> Описание, выпуски, play и загрузка работают и без подписки. Подкаст не появится в ленте, пока вы не нажмёте «Подписаться».</p></div>
+      <div class="tabpanel" id="sb-4" role="tabpanel" hidden><p><b>Обложки в две колонки.</b> Сколько не прослушано, дата последнего выпуска и бейдж «3 новых» — с вашего прошлого визита. Если лента не обновилась, это видно прямо на обложке.</p><p>Сортировка — по новым выпускам, недавно слушанным, названию или числу непрослушанных.</p></div>
+    </div>
+    <div class="stage reveal"><figure class="phone" style="--w:300px"><img id="subs-phone" data-shot="28-search-verge" alt="Поиск и подписки" loading="lazy"></figure></div>
+  </div>
+</section>
+
+<!-- ============ Новая подписка ============ -->
+<section class="block band" id="archive" data-chapter="Новая подписка">
+  <div class="wrap split">
+    <div class="reveal">
+      <p class="chap"><span class="tc">15:20</span>Новая подписка</p>
+      <h2>Архив в тысячу выпусков не засыплет ленту</h2>
+      <p class="sub">При подписке приложение спрашивает, что считать уже прослушанным. По умолчанию — всё, кроме пяти последних: свежее ждёт в «Непрослушанных», архив спокойно лежит в карточке подкаста.</p>
+      <div class="archive" aria-label="Пример: подписка на «Радио-Т Архивы»">
+        <div class="arch-head">
+          <div class="chips" role="radiogroup" aria-label="Считать прослушанным">
+            <button role="radio" aria-checked="false" data-mode="none" data-shot="34-new-subscription-no-archive">Ничего</button>
+            <button role="radio" aria-checked="true" data-mode="keep" data-shot="33-new-subscription">Кроме последних <span id="n-label">5</span></button>
+            <button role="radio" aria-checked="false" data-mode="date" data-shot="35-subscription-calendar">До даты…</button>
+          </div>
+          <div class="stepper" id="stepper">
+            <button id="n-dec" aria-label="Меньше">−</button>
+            <output id="n-out">5</output>
+            <button id="n-inc" aria-label="Больше">+</button>
+          </div>
+        </div>
+        <div class="cells" id="cells" aria-label="50 последних выпусков, новые первыми"></div>
+        <div class="arch-foot"><span id="arch-hint">Новые — первыми. Нажмите на выпуск, чтобы сдвинуть границу.</span><span class="mono" id="arch-read"></span></div>
+      </div>
+    </div>
+    <div class="stage reveal"><figure class="phone" style="--w:300px"><img id="arch-phone" data-shot="33-new-subscription" alt="Настройки новой подписки" loading="lazy"></figure></div>
+  </div>
+</section>
+
+<!-- ============ Плеер ============ -->
+<section class="block" id="player" data-chapter="Плеер">
+  <div class="wrap split flip">
+    <div class="reveal">
+      <p class="chap"><span class="tc">21:05</span>Плеер</p>
+      <h2>Главы, очередь<br>и таймкоды в описании</h2>
+      <p class="sub">Обложка, подкаст, название и шкала выпуска с насечками глав. Перемотка на 15 секунд и на минуту — шаги меняются в настройках. Нажатие на обложку ставит паузу.</p>
+      <div class="eps" role="tablist" data-target="player-phone" aria-label="Экраны плеера">
+        <button role="tab" aria-selected="true" data-shot="40-player-chapters-paused" aria-controls="pl-1"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>Плеер</b><small>шкала · глава · перемотка</small></span></button>
+        <button role="tab" aria-selected="false" data-shot="42-player-chapters-list" aria-controls="pl-4"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>Главы</b><small>список · переход в одно касание</small></span></button>
+        <button role="tab" aria-selected="false" data-shot="24-player-description" aria-controls="pl-2"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>Описание выпуска</b><small>прямо под плеером</small></span></button>
+        <button role="tab" aria-selected="false" data-shot="23-playback-queue" aria-controls="pl-3"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>Очередь</b><small>выпуски играют подряд</small></span></button>
+      </div>
+      <div class="tabpanel" id="pl-1" role="tabpanel"><p><b>Главы — если автор их разметил.</b> Границы глав видны насечками на шкале, а над перемоткой — название текущей главы, её номер и длительность: <span class="mono" style="white-space:nowrap">2 из 7 · 20:39</span>. Стрелки по краям переходят к соседним главам.</p><p>Справа под шкалой — сколько осталось с учётом скорости.</p></div>
+      <div class="tabpanel" id="pl-4" role="tabpanel" hidden><p><b>Нажмите на название главы</b> — откроется список с началом и длительностью каждой, текущая выделена. Нужная тема двухчасового выпуска — в одно касание.</p><p>Главы берутся из ленты Podcasting 2.0 или из меток внутри файла и видны сразу, ещё до нажатия play.</p></div>
+      <div class="tabpanel" id="pl-2" role="tabpanel" hidden><p><b>Пролистайте плеер вниз.</b> Ссылки в описании нажимаются, а таймкоды вида <span class="mono">12:34</span> переводят позицию — с кнопкой «Вернуться», если промахнулись.</p></div>
+      <div class="tabpanel" id="pl-3" role="tabpanel" hidden><p><b>Порядок — перетаскиванием, убрать — свайпом.</b> Каждый выпуск начинает со своего места. Доигравший остаётся в очереди с галочкой, пока вы сами его не уберёте.</p></div>
+      <ul class="points">
+        <li><span class="ic"><svg><use href="#i-headset"/></svg></span><div><b>Кнопки наушников перематывают</b><span>«Вперёд» и «назад» на гарнитуре, часах и в машине — это ±15 секунд, а не прыжок в другой выпуск посреди фразы.</span></div></li>
+        <li><span class="ic"><svg><use href="#i-pause"/></svg></span><div><b>Звук не начинается сам</b><span>Открыли приложение — плеер ждёт на паузе там, где вы остановились. Играть начинает только ваше нажатие.</span></div></li>
+      </ul>
+    </div>
+    <div class="stage reveal"><figure class="phone" style="--w:300px"><img id="player-phone" data-shot="40-player-chapters-paused" alt="Экран плеера" loading="lazy"></figure></div>
+  </div>
+</section>
+
+<!-- ============ Звук ============ -->
+<section class="block" id="sound" style="padding-top:40px" data-chapter="Звук">
+  <div class="wrap split">
+    <div class="reveal">
+      <p class="chap"><span class="tc">26:40</span>Звук</p>
+      <h2>Своя скорость<br>у каждого подкаста</h2>
+      <p class="sub">Новости — на 1.6×, неторопливое интервью — на 1.1×: приложение запомнит скорость каждого подкаста. Скорость, эквалайзер и таймер сна — чипами прямо в плеере.</p>
+      <div class="eps" role="tablist" data-target="sound-phone" aria-label="Настройки звука">
+        <button role="tab" aria-selected="true" data-shot="19-player-speed" aria-controls="sn-1"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>Скорость</b><small>0.25× – 4× · шаг 0.05</small></span></button>
+        <button role="tab" aria-selected="false" data-shot="21-equalizer-on" aria-controls="sn-2"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>Эквалайзер</b><small>пресеты для речи</small></span></button>
+        <button role="tab" aria-selected="false" data-shot="22-player-sleep-timer" aria-controls="sn-3"><span class="pi"><svg><use href="#i-play"/></svg><span class="eq"><i></i><i></i><i></i></span></span><span><b>Таймер сна</b><small>10–60 мин · затухание</small></span></button>
+      </div>
+      <div class="tabpanel" id="sn-1" role="tabpanel"><p><b>От 0.25× до 4× с шагом 0.05.</b> Ползунок, точные «−» и «+» и готовые значения. Новая подписка получает скорость по умолчанию из настроек.</p></div>
+      <div class="tabpanel" id="sn-2" role="tabpanel" hidden><p><b>Пресеты сделаны для голоса.</b> «Голос» добавляет разборчивости, «Ночь» поднимает середину на тихой громкости, «Без шипения» срезает свистящие.</p></div>
+      <div class="tabpanel" id="sn-3" role="tabpanel" hidden><p><b>Одно касание — таймер заведён.</b> Перед остановкой звук плавно затихает. Не спите — встряхните телефон, и отсчёт начнётся заново.</p><p>Долгое нажатие открывает настройки таймера, не прерывая выпуск.</p></div>
+    </div>
+    <div class="stage reveal"><figure class="phone" style="--w:300px"><img id="sound-phone" data-shot="19-player-speed" alt="Настройка звука" loading="lazy"></figure></div>
+  </div>
+</section>
+
+<!-- ============ Загрузки ============ -->
+<section class="block" id="offline" style="padding-top:40px" data-chapter="Загрузки">
+  <div class="wrap split flip">
+    <div class="reveal">
+      <p class="chap"><span class="tc">31:55</span>Загрузки</p>
+      <h2>Скачанное<br>играет без сети</h2>
+      <p class="sub">Скачайте выпуски в дорогу — пока файл качается, его уже можно слушать потоком. В сводке видно, сколько места занимают загрузки приложения.</p>
+      <ul class="points">
+        <li><span class="ic"><svg><use href="#i-wifi"/></svg></span><div><b>Только по Wi-Fi — по умолчанию</b><span>Без Wi-Fi загрузки ждут и продолжаются сами, когда сеть появится. Слушать потоком настройка не мешает.</span></div></li>
+        <li><span class="ic"><svg><use href="#i-progress"/></svg></span><div><b>Удалить файл — не потерять позицию</b><span>Позиция и отметка «прослушано» остаются. Удалённый выпуск можно скачать снова или дослушать потоком.</span></div></li>
+        <li><span class="ic"><svg><use href="#i-pause"/></svg></span><div><b>«Остановить все» помнит решение</b><span>Остановленные загрузки не оживут сами после перезапуска приложения.</span></div></li>
+      </ul>
+    </div>
+    <div class="stage reveal"><figure class="phone" style="--w:300px"><img data-shot="26-downloads" alt="Скачанные выпуски и занятое место" loading="lazy"></figure></div>
+  </div>
+</section>
+
+<!-- ============ Мелочи ============ -->
+<section class="block band" id="details" data-chapter="Мелочи">
+  <div class="wrap">
+    <div class="reveal">
+      <p class="chap"><span class="tc">35:30</span>Мелочи</p>
+      <h2>Ничего не происходит без спроса</h2>
+      <p class="sub">Подкаст-плеер живёт в фоне неделями. Поэтому в нём важнее всего то, чего он не делает: не стирает, не дублирует, не начинает играть и не шумит уведомлениями.</p>
+    </div>
+    <div class="details">
+      <div class="reveal">
+        <div class="prefix" id="prefix">
+          <div class="row-h">
+            <div><b>Скрывать повтор в названиях</b><small id="prefix-note">Будет: «Почему кошки мурчат»</small></div>
+            <button class="switch" role="switch" aria-checked="false" id="prefix-switch" aria-label="Скрывать повтор в названиях"></button>
+          </div>
+          <div class="ep"><span class="cover" aria-hidden="true">Н</span><div><b><span class="pre">[Наука просто] </span>Почему кошки мурчат</b><small>Наука просто · 24 мин · сегодня</small></div></div>
+          <div class="ep"><span class="cover" aria-hidden="true">Н</span><div><b><span class="pre">[Наука просто] </span>Как работает GPS в телефоне</b><small>Наука просто · 31 мин · 14 окт.</small></div></div>
+          <div class="ep"><span class="cover" aria-hidden="true">Н</span><div><b><span class="pre">[Наука просто] </span>Откуда берётся ветер</b><small>Наука просто · 27 мин · 7 окт.</small></div></div>
+        </div>
+        <p class="sub" style="font-size:16px;margin-top:16px">Подкаст начинает каждое название с одного и того же? Включите переключатель в настройках подписки — общее начало найдётся само, вводить ничего не нужно.</p>
+      </div>
+      <ul class="notes reveal">
+        <li><span class="ic"><svg><use href="#i-unsub"/></svg></span><div><b>Отписка не стирает историю</b><span>Прогресс и отметки остаются. Перед отпиской приложение скажет, сколько скачанного удалится и какие выпуски уйдут из очереди.</span></div></li>
+        <li><span class="ic"><svg><use href="#i-bell"/></svg></span><div><b>Одно уведомление на подкаст</b><span>Сколько новых выпусков и как они называются. Выключается у каждого подкаста отдельно.</span></div></li>
+        <li><span class="ic"><svg><use href="#i-feed"/></svg></span><div><b>Кривые ленты — не проблема</b><span>Битая кодировка, необъявленные теги и прочие ошибки авторов — приложение их переваривает. Ошибка одной ленты не мешает обновиться остальным.</span></div></li>
+        <li><span class="ic"><svg><use href="#i-move"/></svg></span><div><b>Никаких дублей</b><span>Лента сменила адрес, автор переписал ссылки на файлы — выпуски остаются теми же, с тем же прогрессом, а не копиями рядом.</span></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Темы ============ -->
+<section class="block" id="themes" data-chapter="Оформление">
+  <div class="wrap">
+    <div class="reveal">
+      <p class="chap"><span class="tc">38:15</span>Оформление</p>
+      <h2>Холодная или тёплая.<br>Светлая, тёмная или чёрная</h2>
+      <p class="sub">Две палитры и три фона. Чёрный фон — для OLED-экранов и прослушивания перед сном. Значок приложения меняет цвет вместе с палитрой. Нажмите на вариант — страница переоденется вместе с ним.</p>
+    </div>
+    <div class="tgrid reveal" id="theme-grid">
+      <span></span>
+      <span class="hd"><svg><use href="#i-sun"/></svg>Светлая</span>
+      <span class="hd"><svg><use href="#i-moon"/></svg>Тёмная</span>
+      <span class="hd"><svg><use href="#i-black"/></svg>Чёрная</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Все экраны ============ -->
+<section class="block" id="screens" style="padding-bottom:40px" data-chapter="Все экраны">
+  <div class="wrap reveal">
+    <p class="chap"><span class="tc">40:50</span>Все экраны</p>
+    <h2>Посмотрите сами</h2>
+    <p class="sub">Настоящие скриншоты, настоящие ленты. Листайте стрелками, свайпом или по шкале; нажмите на экран, чтобы увеличить.</p>
+  </div>
+  <div class="slider reveal" role="region" aria-roledescription="карусель" aria-label="Экраны приложения">
+    <div class="reel" id="reel" tabindex="0"></div>
+    <div class="reel-bar">
+      <div class="reel-row">
+        <button class="arrow" id="reel-prev" aria-label="Предыдущий экран"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg></button>
+        <div class="reel-cap" aria-live="polite"><b id="reel-title"></b></div>
+        <button class="arrow" id="reel-next" aria-label="Следующий экран"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+      <div class="rscrub" id="rscrub"><i class="groove"></i><i class="fill"></i><i class="thumb"></i></div>
+      <div class="reel-time"><span id="reel-pos">01</span><span id="reel-total">−20</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Скачать ============ -->
+<section class="final" id="download" data-chapter="Скачать">
+  <div class="wrap reveal">
+    <svg class="icon"><use href="#logo"/></svg>
+    <h2>Подпишитесь на то,<br>что любите слушать</h2>
+    <p class="sub">Бесплатно. Без рекламы, аккаунтов и платных функций. Каталог Apple Podcasts и любые RSS-ленты.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/oasan/podcasts-site/releases/latest/download/podcasts.apk"><svg aria-hidden="true"><use href="#i-download"/></svg><span class="label">Скачать APK<small class="version">v 1.0.7</small></span></a>
+    </div>
+    <p class="req">Android 8.0 и новее</p>
+    <p class="req">Откройте скачанный APK и разрешите установку приложений из браузера, если Android попросит.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Подкасты · 2026 · <a href="privacy.html">Политика конфиденциальности</a></span>
+    <div class="stack"><span>Kotlin</span><span>Jetpack Compose</span><span>Media3</span><span>Room</span><span>WorkManager</span></div>
+  </div>
+</footer>
+
+<dialog class="lightbox" id="lightbox">
+  <form method="dialog"><button aria-label="Закрыть">✕</button></form>
+  <img alt="">
+</dialog>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  const PALETTES = [["cool", "Холодная"], ["warm", "Тёплая"]];
+  const BGS = [["light", "светлая"], ["dark", "тёмная"], ["black", "чёрная"]];
+  const REEL = [
+    ["01-feed", "Новое"], ["04-episode-actions", "Панель выпуска"], ["05-podcasts", "Подписки"], ["07-podcasts-sort", "Сортировка"],
+    ["13-podcast-card", "Карточка подкаста"], ["15-podcast-episodes", "Выпуски подкаста"], ["09-podcast-menu", "Меню подкаста"],
+    ["11-subscription-settings", "Настройки подписки"], ["28-search-verge", "Поиск"], ["31-add-rss-filled", "По ссылке RSS"],
+    ["33-new-subscription", "Новая подписка"], ["40-player-chapters-paused", "Плеер"], ["42-player-chapters-list", "Главы"], ["24-player-description", "Описание выпуска"],
+    ["23-playback-queue", "Очередь"], ["19-player-speed", "Скорость"], ["21-equalizer-on", "Эквалайзер"],
+    ["22-player-sleep-timer", "Таймер сна"], ["26-downloads", "Загрузки"], ["36-downloaded-episode", "Скачанный выпуск"],
+    ["37-settings-playback", "Настройки"], ["39-settings-appearance", "Оформление"],
+  ];
+  const src = (shot, p = root.dataset.palette, b = root.dataset.bg) => `img/${p}-${b}/${shot}.webp`;
+  const pad = n => String(n).padStart(2, "0");
+
+  // Предпочтение: сохранённое → системное. Палитра по умолчанию — холодная, как в приложении.
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem("podcasts-theme") || "{}"); } catch (e) {}
+  root.dataset.palette = saved.palette || "cool";
+  root.dataset.bg = saved.bg || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+
+  // Сетка тем: строки — палитры, столбцы — фоны; каждая карточка показывает свою тему
+  const grid = document.getElementById("theme-grid");
+  for (const [p, pl] of PALETTES) {
+    const label = document.createElement("span");
+    label.className = "rl";
+    label.innerHTML = `<i style="background:${p === "cool" ? "#2B7D8E" : "#C0562B"}"></i>${pl}`;
+    grid.append(label);
+    for (const [b, bl] of BGS) {
+      const btn = document.createElement("button");
+      btn.dataset.p = p; btn.dataset.b = b;
+      btn.setAttribute("aria-label", `${pl} ${bl}`);
+      btn.innerHTML = `<figure class="phone"><img src="${src("01-feed", p, b)}" alt="" loading="lazy"></figure>`;
+      btn.addEventListener("click", () => apply(p, b));
+      grid.append(btn);
+    }
+  }
+
+  // ---------- Шкала страницы в шапке ----------
+  // Страница — как выпуск длиной 42:17: разделы — главы, прокрутка — позиция.
+  const TOTAL = 42 * 60 + 17;
+  const chapters = [...document.querySelectorAll("[data-chapter]")];
+  const scrub = document.getElementById("scrub");
+  const clock = document.getElementById("clock");
+  const fmt = s => `${pad(Math.floor(s / 60))}:${pad(Math.floor(s % 60))}`;
+  const docH = () => document.documentElement.scrollHeight;
+  const maxScroll = () => Math.max(1, docH() - innerHeight);
+  // «Точка чтения» едет от верха окна в начале страницы к его низу в конце:
+  // так у разделов внизу страницы тоже разные отметки.
+  const readPoint = () => scrollY + innerHeight * Math.min(1, scrollY / maxScroll());
+  const placeChapters = () => {
+    scrub.querySelectorAll(".notch").forEach(n => n.remove());
+    chapters.forEach((sec, i) => {
+      const f = i === 0 ? 0 : sec.offsetTop / docH();
+      sec.dataset.at = f;
+      const tc = sec.querySelector(".tc");
+      if (tc) tc.textContent = fmt(f * TOTAL);
+      if (i === 0) return;
+      const n = document.createElement("i");
+      n.className = "notch"; n.style.left = `${f * 100}%`;
+      scrub.append(n);
+    });
+  };
+  const navLinks = [...document.querySelectorAll("nav.links a")];
+  const tick = () => {
+    const rp = readPoint(), f = Math.min(1, rp / docH());
+    scrub.querySelector(".fill").style.width = `${f * 100}%`;
+    scrub.querySelector(".thumb").style.left = `${f * 100}%`;
+    let cur = chapters[0];
+    for (const sec of chapters) if (sec.offsetTop <= rp) cur = sec;
+    clock.innerHTML = `<b>${fmt(f * TOTAL)}</b> · ${cur.dataset.chapter}`;
+    navLinks.forEach(a => a.classList.toggle("on", a.getAttribute("href") === `#${cur.id}`));
+  };
+  let sraf = 0;
+  addEventListener("scroll", () => { cancelAnimationFrame(sraf); sraf = requestAnimationFrame(tick); }, { passive: true });
+  addEventListener("resize", () => { placeChapters(); tick(); });
+  addEventListener("load", () => { placeChapters(); tick(); });
+
+  // ---------- Карусель всех экранов ----------
+  const reel = document.getElementById("reel");
+  const rscrub = document.getElementById("rscrub");
+  const items = REEL.map(([shot, label], i) => {
+    const d = document.createElement("div");
+    d.className = "item";
+    d.setAttribute("aria-label", `${i + 1} из ${REEL.length}: ${label}`);
+    d.innerHTML = `<figure class="phone"><img data-shot="${shot}" alt="${label}" loading="lazy" draggable="false"></figure>`;
+    reel.append(d);
+    const notch = document.createElement("button");
+    notch.setAttribute("aria-label", label);
+    notch.title = label;
+    notch.style.left = `${i / (REEL.length - 1) * 100}%`;
+    notch.addEventListener("click", () => go(i));
+    rscrub.append(notch);
+    return d;
+  });
+  let current = -1;
+  const centerOf = el => el.offsetLeft + el.offsetWidth / 2;
+  const go = i => {
+    i = Math.max(0, Math.min(items.length - 1, i));
+    reel.scrollTo({ left: centerOf(items[i]) - reel.clientWidth / 2, behavior: "smooth" });
+  };
+  // Масштаб и прозрачность каждого экрана зависят от расстояния до центра
+  const layout = () => {
+    const mid = reel.scrollLeft + reel.clientWidth / 2;
+    const step = items[0].offsetWidth;
+    let best = 0, bestD = Infinity;
+    items.forEach((el, i) => {
+      const d = Math.abs(centerOf(el) - mid) / step;
+      if (d < bestD) { bestD = d; best = i; }
+      const t = Math.min(d, 2) / 2;
+      el.style.setProperty("--s", (1 - t * .3).toFixed(3));
+      el.style.setProperty("--o", (1 - Math.min(d, 1.6) * .38).toFixed(3));
+      el.style.setProperty("--sat", (1 - t * .5).toFixed(3));
+    });
+    if (best !== current) {
+      current = best;
+      items.forEach((el, i) => el.classList.toggle("active", i === best));
+      const f = best / (items.length - 1) * 100;
+      rscrub.querySelector(".fill").style.width = `${f}%`;
+      rscrub.querySelector(".thumb").style.left = `${f}%`;
+      document.getElementById("reel-title").textContent = REEL[best][1];
+      document.getElementById("reel-pos").textContent = pad(best + 1);
+      document.getElementById("reel-total").textContent = `−${pad(items.length - best - 1)}`;
+      document.getElementById("reel-prev").disabled = best === 0;
+      document.getElementById("reel-next").disabled = best === items.length - 1;
+    }
+  };
+  let raf = 0;
+  reel.addEventListener("scroll", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(layout); }, { passive: true });
+  addEventListener("resize", layout);
+  document.getElementById("reel-prev").addEventListener("click", () => go(current - 1));
+  document.getElementById("reel-next").addEventListener("click", () => go(current + 1));
+  reel.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight") { e.preventDefault(); go(current + 1); }
+    if (e.key === "ArrowLeft") { e.preventDefault(); go(current - 1); }
+  });
+
+  // Перетаскивание мышью; на телефоне работает обычный свайп
+  let drag = null, suppressClickUntil = 0;
+  reel.addEventListener("pointerdown", e => {
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
+    drag = { x: e.clientX, left: reel.scrollLeft, moved: false };
+  });
+  addEventListener("pointermove", e => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.moved && Math.abs(dx) > 5) { drag.moved = true; reel.classList.add("dragging"); }
+    if (drag.moved) reel.scrollLeft = drag.left - dx;
+  });
+  addEventListener("pointerup", e => {
+    if (!drag) return;
+    const moved = drag.moved, dx = e.clientX - drag.x;
+    drag = null;
+    if (!moved) return;
+    reel.classList.remove("dragging");
+    // Короткий рывок листает на один экран, длинный — к ближайшему
+    go(Math.abs(dx) > 40 && Math.abs(dx) < items[0].offsetWidth / 2 ? current + (dx < 0 ? 1 : -1) : current);
+    suppressClickUntil = performance.now() + 100;
+  });
+  reel.addEventListener("click", e => { if (performance.now() < suppressClickUntil) e.stopPropagation(); }, true);
+  // Нажатие на соседний экран листает к нему, на центральный — увеличивает
+  reel.addEventListener("click", e => {
+    const item = e.target.closest(".item");
+    if (!item) return;
+    const i = items.indexOf(item);
+    if (i !== current) { e.stopPropagation(); go(i); }
+  });
+  // Начинаем с третьего экрана, чтобы соседи были видны с обеих сторон
+  requestAnimationFrame(() => {
+    reel.scrollLeft = centerOf(items[2]) - reel.clientWidth / 2;
+    layout();
+  });
+
+  // ---------- Тема страницы ----------
+  function paint() {
+    document.querySelectorAll("img[data-shot]").forEach(img => {
+      const next = src(img.dataset.shot);
+      if (img.getAttribute("src") !== next) img.setAttribute("src", next);
+    });
+    document.querySelectorAll("[data-set-palette]").forEach(b => b.setAttribute("aria-pressed", b.dataset.setPalette === root.dataset.palette));
+    document.querySelectorAll("[data-set-bg]").forEach(b => b.setAttribute("aria-pressed", b.dataset.setBg === root.dataset.bg));
+    grid.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === root.dataset.palette && b.dataset.b === root.dataset.bg));
+  }
+  function apply(p, b) {
+    root.dataset.palette = p; root.dataset.bg = b;
+    try { localStorage.setItem("podcasts-theme", JSON.stringify({ palette: p, bg: b })); } catch (e) {}
+    paint();
+  }
+  document.querySelectorAll("[data-set-palette]").forEach(b => b.addEventListener("click", () => apply(b.dataset.setPalette, root.dataset.bg)));
+  document.querySelectorAll("[data-set-bg]").forEach(b => b.addEventListener("click", () => apply(root.dataset.palette, b.dataset.setBg)));
+  paint();
+
+  // Смена скриншота с затуханием
+  const swap = (img, shot) => {
+    if (img.dataset.shot === shot) return;
+    img.classList.add("fading");
+    setTimeout(() => { img.dataset.shot = shot; img.src = src(shot); img.classList.remove("fading"); }, 180);
+  };
+
+  // ---------- Строки-вкладки: меняют текст и скриншот рядом ----------
+  document.querySelectorAll(".eps").forEach(list => {
+    const img = document.getElementById(list.dataset.target);
+    const tabs = [...list.querySelectorAll("[role=tab]")];
+    const select = tab => {
+      tabs.forEach(t => {
+        const on = t === tab;
+        t.setAttribute("aria-selected", on);
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+      });
+      swap(img, tab.dataset.shot);
+    };
+    tabs.forEach((t, i) => {
+      t.tabIndex = t.getAttribute("aria-selected") === "true" ? 0 : -1;
+      t.addEventListener("click", () => select(t));
+      t.addEventListener("keydown", e => {
+        const d = ["ArrowDown", "ArrowRight"].includes(e.key) ? 1 : ["ArrowUp", "ArrowLeft"].includes(e.key) ? -1 : 0;
+        if (d) { e.preventDefault(); const n = tabs[(i + d + tabs.length) % tabs.length]; n.focus(); select(n); }
+      });
+    });
+  });
+
+  // ---------- Новая подписка: что считать прослушанным ----------
+  // «Радио-Т Архивы»: 1035 выпусков, еженедельно, последний — 17 октября 2026.
+  const TOTAL_EPS = 1035, SHOWN = 50;
+  const MONTHS = ["янв.", "февр.", "марта", "апр.", "мая", "июня", "июля", "авг.", "сент.", "окт.", "нояб.", "дек."];
+  const dateOf = i => { const d = new Date(2026, 9, 17 - i * 7); return `${d.getDate()} ${MONTHS[d.getMonth()]}${d.getFullYear() !== 2026 ? " " + d.getFullYear() : ""}`; };
+  const cells = document.getElementById("cells");
+  const cellBtns = Array.from({ length: SHOWN }, (_, i) => {
+    const b = document.createElement("button");
+    b.textContent = 1034 - i;
+    b.title = `Радио-Т ${1034 - i} · ${dateOf(i)}`;
+    b.addEventListener("click", () => {
+      if (arch.mode === "keep") arch.n = i + 1;
+      else if (arch.mode === "date") arch.edge = i;
+      else return;
+      renderArch();
+    });
+    cells.append(b);
+    return b;
+  });
+  const arch = { mode: "keep", n: 5, edge: 7 };
+  const chips = [...document.querySelectorAll(".chips [role=radio]")];
+  const plural = (n, a, b, c) => { const m = n % 10, h = n % 100; return m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 12 || h > 14) ? b : c; };
+  function renderArch() {
+    const keep = arch.mode === "none" ? TOTAL_EPS : arch.mode === "keep" ? arch.n : arch.edge + 1;
+    cellBtns.forEach((b, i) => {
+      b.classList.toggle("played", i >= keep);
+      b.classList.toggle("edge", arch.mode === "date" && i === arch.edge);
+    });
+    chips.forEach(c => c.setAttribute("aria-checked", c.dataset.mode === arch.mode));
+    document.getElementById("n-out").textContent = arch.n;
+    document.getElementById("n-label").textContent = arch.n;
+    document.getElementById("stepper").setAttribute("aria-disabled", arch.mode !== "keep");
+    document.getElementById("arch-hint").textContent =
+      arch.mode === "none" ? "Отметки не меняются: весь архив — в «Непрослушанных»." :
+      arch.mode === "keep" ? "Новые — первыми. Нажмите на выпуск, чтобы сдвинуть границу." :
+      `Прослушанными станут выпуски раньше ${dateOf(arch.edge)}. Нажмите на другой выпуск.`;
+    document.getElementById("arch-read").textContent = `${keep} ${plural(keep, "выпуск ждёт", "выпуска ждут", "выпусков ждут")} из ${TOTAL_EPS}`;
+    swap(document.getElementById("arch-phone"), chips.find(c => c.dataset.mode === arch.mode).dataset.shot);
+  }
+  chips.forEach(c => c.addEventListener("click", () => { arch.mode = c.dataset.mode; renderArch(); }));
+  document.getElementById("n-dec").addEventListener("click", () => { arch.n = Math.max(1, arch.n - 1); renderArch(); });
+  document.getElementById("n-inc").addEventListener("click", () => { arch.n = Math.min(50, arch.n + 1); renderArch(); });
+  renderArch();
+
+  // ---------- Повтор в названиях ----------
+  const prefix = document.getElementById("prefix");
+  const sw = document.getElementById("prefix-switch");
+  sw.addEventListener("click", () => {
+    const on = sw.getAttribute("aria-checked") !== "true";
+    sw.setAttribute("aria-checked", on);
+    prefix.classList.toggle("on", on);
+    document.getElementById("prefix-note").textContent = on ? "Скрыто: «[Наука просто]»" : "Будет: «Почему кошки мурчат»";
+  });
+
+  // ---------- Увеличение скриншота ----------
+  const box = document.getElementById("lightbox");
+  document.addEventListener("click", e => {
+    const fig = e.target.closest(".phone");
+    if (!fig || fig.closest("#theme-grid")) return;
+    const img = fig.querySelector("img");
+    box.querySelector("img").src = img.currentSrc || img.src;
+    box.querySelector("img").alt = img.alt;
+    box.showModal();
+  });
+  box.addEventListener("click", e => { if (e.target === box) box.close(); });
+
+  // Появление при прокрутке
+  const io = new IntersectionObserver(entries => entries.forEach(en => {
+    if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+  }), { threshold: .12 });
+  document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+  placeChapters(); tick();
+})();
+</script>
+</body>
+</html>
